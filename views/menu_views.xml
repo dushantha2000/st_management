@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Root Menu -->
+    <menuitem id="menu_student_root"
+              name="Student Management"
+              web_icon="st_management,static/description/icon.png"
+              sequence="10"/>
+
+    <!-- Top  Submenus -->
+    <menuitem id="menu_student_operations"
+              name="Operations"
+              parent="menu_student_root"
+              sequence="10"/>
+
+    <menuitem id="menu_student_configuration"
+              name="Configuration"
+              parent="menu_student_root"
+              sequence="100"/>
+
+    <!-- Operation Menus -->
+    <menuitem id="menu_student_main"
+              name="Students"
+              parent="menu_student_operations"
+              action="action_student_student"
+              sequence="10"/>
+
+    <menuitem id="menu_student_fees"
+              name="Fee Payments"
+              parent="menu_student_operations"
+              action="action_student_fees"
+              sequence="20"/>
+
+    <!-- Config Menus -->
+    <menuitem id="menu_course_main"
+              name="Courses"
+              parent="menu_student_configuration"
+              action="action_course_course"
+              sequence="10"/>
+
+</odoo>

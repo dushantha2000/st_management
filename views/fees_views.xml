@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_student_fees_form" model="ir.ui.view">
+        <field name="name">student.fees.form</field>
+        <field name="model">student.fees</field>
+        <field name="arch" type="xml">
+            <form string="Fee Payment">
+                <header>
+                    <button name="action_confirm"
+                            string="Confirm Payment"
+                            class="oe_highlight"
+                            type="object"
+                            invisible="state != 'draft'"/>
+
+                    <button name="action_cancel"
+                            string="Cancel"
+                            type="object"
+                            invisible="state in ['paid', 'cancel']"/>
+
+                    <field name="state"
+                           widget="statusbar"
+                           statusbar_visible="draft,pending,paid"/>
+                </header>
+
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="student_id" readonly="state != 'draft'"
+                                   options="{'no_create': True, 'no_open': True}"/>
+                            <field name="student_course_ids" invisible="1"/>
+                            <field name="course_id"
+                                   readonly="state != 'draft'"
+                                   domain="[('id', 'in', student_course_ids)]"
+                                   options="{'no_create': True, 'no_open': True}"/>
+                        </group>
+                        <group>
+                            <field name="date" readonly="state != 'draft'"/>
+                            <field name="payment_method" readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Payment Details">
+                            <field name="amount_total"/>
+                            <field name="amount_paid" readonly="state != 'draft'"/>
+                            <field name="amount_balance"/>
+                        </group>
+                    </group>
+                </sheet>
+
+
+                <!--log note handling-->
+                <chatter/>
+
+            </form>
+        </field>
+    </record>
+
+    <record id="view_student_fees_list" model="ir.ui.view">
+        <field name="name">student.fees.list</field>
+        <field name="model">student.fees</field>
+        <field name="arch" type="xml">
+            <list string="Fee Payments"
+                  decoration-success="state == 'paid'"
+                  decoration-warning="state == 'pending'"
+                  decoration-info="state == 'draft'"
+                  decoration-danger="state == 'cancel'">
+                <field name="name"/>
+                <field name="student_id"/>
+                <field name="course_id"/>
+                <field name="date"/>
+                <field name="amount_total" sum="Total Amount"/>
+                <field name="amount_paid" sum="Total Paid"/>
+                <field name="amount_balance" sum="Total Balance"/>
+                <field name="state"
+                       widget="badge"
+                       decoration-success="state == 'paid'"
+                       decoration-warning="state == 'pending'"
+                       decoration-info="state == 'draft'"
+                       decoration-danger="state == 'cancel'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_student_fees" model="ir.actions.act_window">
+        <field name="name">Fees</field>
+        <field name="res_model">student.fees</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Record your first fee payment!
+            </p>
+        </field>
+    </record>
+
+</odoo>
