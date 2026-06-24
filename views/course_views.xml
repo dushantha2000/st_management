@@ -7,6 +7,13 @@
         <field name="arch" type="xml">
             <form string="Course">
                 <header>
+
+
+
+
+
+
+
                     <button name="action_publish" string="Publish" class="oe_highlight" type="object"
                             invisible="state != 'draft'"/>
                     <button name="action_close" string="Close" type="object" invisible="state != 'published'"/>
