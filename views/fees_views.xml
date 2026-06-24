@@ -7,6 +7,19 @@
         <field name="arch" type="xml">
             <form string="Fee Payment">
                 <header>
+
+
+
+                    <!--invoice-->
+                    <button name="action_create_invoice"
+                            string="Create Invoice"
+                            type="object"
+                            class="btn-primary"
+                            invisible="move_id != False"/>
+
+
+
+
                     <button name="action_confirm"
                             string="Confirm Payment"
                             class="oe_highlight"
