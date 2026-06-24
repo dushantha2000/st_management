@@ -4,7 +4,7 @@
     'summary': 'Manage student records',
     'category': 'School',
     'author': 'Dushantha',
-    'depends': ['base', 'mail'],
+    'depends': ['base', 'mail', 'account'],
     'data': [
         'security/ir.model.access.csv',
         'data/sequence.xml',

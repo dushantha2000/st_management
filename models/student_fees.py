@@ -1,8 +1,9 @@
 from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 
 
 class StudentFees(models.Model):
+
     _name = 'student.fees'
     _description = 'Student Fees Management'
 
@@ -12,29 +13,78 @@ class StudentFees(models.Model):
 
     _order = 'date desc'
 
+    # --------------------------------------------------------------------------------------
 
-    name = fields.Char(string='Reference', required=True, copy=False, readonly=True, default=lambda self: _('New'),tracking=True)
+    #db relations
 
-    student_id = fields.Many2one('student.student', string='Student', required=True, tracking=True)
+    student_course_ids = fields.Many2many(
+        'course.course',
+        related='student_id.course_ids',
+        string="Student's Enrolled Courses",
+        tracking=True
+    )
 
-    student_course_ids = fields.Many2many('course.course', related='student_id.course_ids', string="Student's Enrolled Courses",tracking=True)
+    course_id = fields.Many2one(
+        'course.course',
+        string='Course',
+        required=True,
+        tracking=True
+    )
 
-    course_id = fields.Many2one('course.course', string='Course', required=True, tracking=True)
+    student_id = fields.Many2one(
+        'student.student',
+        string='Student',
+        required=True,
+        tracking=True)
 
-    nic_number = fields.Char(string='NIC Number', required=True, tracking=True)
+    # ----------------------------------------------------------------------------------------
 
-    amount_total = fields.Float(string='Total Amount', compute='_compute_amount_total', store=True, readonly=True,tracking=True)
 
-    amount_paid = fields.Float(string='Amount Paid', required=True, tracking=True)
+    name = fields.Char(
+        string='Reference',
+        required=True, copy=False,
+        readonly=True,
+        default=lambda self: _('New'),
+        tracking=True
+    )
 
-    amount_balance = fields.Float(string='Balance', compute='_compute_balance', store=True,tracking=True)
 
-    date = fields.Date(string='Payment Date', default=fields.Date.context_today, tracking=True)
+    amount_total = fields.Float(
+        string='Total Amount',
+        compute='_compute_amount_total',
+        store=True,
+        readonly=True,
+        tracking=True
+    )
+
+    amount_paid = fields.Float(
+        string='Amount Paid',
+        required=True,
+        tracking=True
+    )
+
+    amount_balance = fields.Float(
+        string='Balance',
+        compute='_compute_balance',
+        store=True,
+        tracking=True
+    )
+
+    date = fields.Date(
+        string='Payment Date',
+        default=fields.Date.context_today,
+        tracking=True
+    )
+
+
     payment_method = fields.Selection([
         ('cash', 'Cash'),
         ('bank', 'Bank Transfer'),
         ('card', 'Credit/Debit Card')
-    ], string='Payment Method', default='cash', tracking=True)
+    ], string='Payment Method',
+        default='cash',
+        tracking=True
+    )
 
     state = fields.Selection([
         ('draft', 'Draft'),
@@ -44,7 +94,106 @@ class StudentFees(models.Model):
     ], string='Status', default='draft', tracking=True)
 
 
+    # --------------------------------------------------------------------------------------------------------
 
+    # link create invoice
+
+    move_id = fields.Many2one(
+        'account.move',
+        string='Invoice',
+        readonly=True,
+        copy=False
+    )
+    invoice_state = fields.Selection(
+        related='move_id.state',
+        string='Invoice Status',
+        store=True
+    )
+
+    # partner_id = fields.Many2one(
+    #     'res.partner',
+    #     string='Accounting Contact',
+    #     ondelete='restrict',
+    #     tracking=True
+    # )
+
+    # --------------------------------------------------------------------------------------------------
+
+    # create invoice
+    def action_create_invoice(self):
+
+        self.ensure_one()
+
+
+        # Income account
+        account = self.env['account.account'].search([
+            ('account_type', '=', 'income')
+        ], limit=1)
+
+
+        if not account:
+            raise UserError(_("No Income Account found."))
+
+
+
+        # Get or create partner from student name
+        partner = self.env['res.partner'].search([
+            ('name', '=', self.student_id.name)
+        ], limit=1)
+
+
+        if not partner:
+            partner = self.env['res.partner'].create({
+                'name': self.student_id.name,
+            })
+
+        # Build invoice
+        invoice_vals = {
+            #must need pass  "move_type" in coming or out going
+            'move_type': 'out_invoice',
+
+            #must need pass  "partner_id" that is student_id
+            'partner_id': partner.id,
+
+            'invoice_date': fields.Date.today(),
+
+            'ref': self.name,
+
+            #Internal Note
+            'narration': _(
+                'Course Fee Payment\nStudent: %s\nCourse: %s'
+            ) % (self.student_id.name, self.course_id.name),
+
+
+            'invoice_line_ids': [(0, 0, {
+                'name': _('Course Fee: %s') % self.course_id.name,
+                # 'quantity': 1.0,
+                'price_unit': self.amount_paid,
+                'account_id': account.id,
+            })],
+        }
+
+        # Create and post
+        invoice = self.env['account.move'].create(invoice_vals)
+        invoice.action_post()
+
+
+
+        # Link and update state
+        self.move_id = invoice.id
+        self.state = 'pending'
+
+        # Open invoice
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Invoice'),
+            'res_model': 'account.move',
+            'res_id': invoice.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
+
+    # -----------------------------------------------------------------------------------------------------
 
 
 
