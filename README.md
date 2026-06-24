@@ -22,7 +22,7 @@ A comprehensive Odoo module designed to streamline educational institution opera
 ## 🛠️ Installation
 
 ### Prerequisites
-- Odoo 17.0 or 18.0 (Community or Enterprise)
+- Odoo 19 (Community or Enterprise)
 - Python 3.10+
 
 ### Steps
